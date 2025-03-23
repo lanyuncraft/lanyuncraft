@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蓝云工坊</title>
+</head>
+</html>
+<link rel="stylesheet" href="css/index.css">
+<header class="site-header">
+    <section class="search-section">
+        <div class="header-content" style="display: flex; align-items: center; gap: 10px;">
+            <img src="img/logo.svg" alt="蓝云工坊 Logo" class="site-logo" width="80" height="80">
+            <div style="display: flex; flex-direction: column;">
+                <h1 class="site-title">蓝云工坊-内测</h1>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="搜索资源名称、作者或分类" class="collapsed">
+            <button id="searchButton" class="search-button">&#128269;</button>
+        </div>
+    </section>
+</header>
+<section class="search-section">
+    <div class="carousel-container">
+        <div class="carousel-slides">
+            <div class="carousel-slide active">
+                <img src="img/1.jpg" alt="Slide 1">
+            </div>
+            <div class="carousel-slide">
+                <img src="img/2.jpg" alt="Slide 2">
+            </div>
+            <div class="carousel-slide">
+                <img src="img/3.jpg" alt="Slide 3">
+            </div>
+        </div>
+        <button class="carousel-prev">&#10094;</button>
+        <button class="carousel-next">&#10095;</button>
+    </div>
+</section>
+<section class="search-section">
+    <div class="image-buttons-container">
+        <div class="image-buttons">
+            <div class="image-button" onclick="window.location.href='page1.html'">
+                <img src="img\icon\about.png" alt="Button 1">
+            </div>
+            <div class="image-button" onclick="window.location.href='page2.html'">
+                <img src="img\icon\ds.png" alt="Button 2">
+            </div>
+            <div class="image-button" onclick="window.location.href='page3.html'">
+                <img src="img\icon\vip.png" alt="Button 3">
+            </div>
+        </div>
+    </div>
+</section>
+<section class="search-section">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <h2>推荐资源</h2>
+        <button id="refreshButton" class="search-button">刷新推荐</button>
+    </div>
+    <div id="randomResources" class="resource-grid"></div>
+</section>
+
+<script src="information.js"></script>
+<script>
+// 轮播图功能
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+const totalSlides = slides.length;
+const slidesContainer = document.querySelector('.carousel-slides');
+
+function showSlide(index) {
+    slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+    slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+    });
+}
+
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    showSlide(currentSlide);
+}
+
+function prevSlide() {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    showSlide(currentSlide);
+}
+
+document.querySelector('.carousel-next').addEventListener('click', nextSlide);
+document.querySelector('.carousel-prev').addEventListener('click', prevSlide);
+
+// 自动轮播
+setInterval(nextSlide, 5000);
+
+// 添加搜索功能
+window.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('randomResources');
+    container.innerHTML = ''; // 清空现有内容
+    
+    getRandomResources(6).forEach(resource => {
+        const item = document.createElement('div');
+        item.className = 'resource-item';
+        item.innerHTML = `
+            <div class="resource-thumbnail">
+                <img src="${resource.icon}" alt="${resource.name}" loading="lazy">
+                <div class="resource-meta">
+                    <span class="version">v${resource.version}</span>
+                    <span class="category">${categoryMap[resource.category]}</span>
+                </div>
+            </div>
+            <div class="resource-content">
+                <h3>${resource.name}</h3>
+                <div class="resource-info">
+                    <p class="author">${resource.author}</p>
+                    <p class="size">${resource.size}</p>
+                </div>
+                <button class="detail-button" 
+                        onclick="gotoResourceDetail(${resource.id})"
+                        aria-label="查看详情">
+                    <span>查看详情</span>
+                    <svg>...</svg>
+                </button>
+            </div>
+        `;
+        container.appendChild(item);
+    });
+
+    // 添加搜索功能
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) {
+            window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+        }
+    });
+});
+
+// 添加刷新功能
+document.getElementById('refreshButton').addEventListener('click', () => {
+    const button = document.getElementById('refreshButton');
+    const container = document.getElementById('randomResources');
+    
+    // 添加加载动画
+    container.classList.add('loading');
+    button.disabled = true;
+
+    setTimeout(() => {
+        container.innerHTML = ''; // 清空现有内容
+        
+        getRandomResources(6).forEach(resource => {
+            const item = document.createElement('div');
+            item.className = 'resource-item';
+            item.innerHTML = `
+                <div class="resource-thumbnail">
+                    <img src="${resource.icon}" alt="${resource.name}" loading="lazy">
+                    <div class="resource-meta">
+                        <span class="version">v${resource.version}</span>
+                        <span class="category">${categoryMap[resource.category]}</span>
+                    </div>
+                </div>
+                <div class="resource-content">
+                    <h3>${resource.name}</h3>
+                    <div class="resource-info">
+                        <p class="author">${resource.author}</p>
+                        <p class="size">${resource.size}</p>
+                    </div>
+                    <button class="detail-button" 
+                            onclick="gotoResourceDetail(${resource.id})"
+                            aria-label="查看详情">
+                        <span>查看详情</span>
+                        <svg>...</svg>
+                    </button>
+                </div>
+            `;
+            container.appendChild(item);
+        });
+
+        // 移除加载动画
+        container.classList.remove('loading');
+        button.classList.remove('refreshing');
+        button.disabled = false;
+    }, 1000); // 模拟1秒加载时间
+});
+</script>
